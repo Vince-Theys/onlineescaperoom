@@ -1,0 +1,46 @@
+# CI pipeline — runs on every pull request targeting dev or main.
+# It checks that the code compiles and passes linting.
+# No tests yet — we will add them as the project grows.
+
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build-and-lint:
+    name: Build & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the code from the branch being merged
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js (matching the version used locally)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Run ESLint — fails the pipeline if there are lint errors
+      - name: Lint
+        run: npm run lint
+
+      # 5. Run the TypeScript build — fails if there are type errors or broken imports
+      - name: Build
+        run: npm run build
+        env:
+          # Vite needs these variables at build time.
+          # These are placeholder values — the build just needs them to exist.
+          # Real values live in .env locally and will be set as GitHub Secrets later.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
